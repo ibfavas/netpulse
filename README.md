@@ -4,7 +4,7 @@
 
 NetPulse is a zero-dependency, high-density real-time network diagnostic telemetry HUD designed exclusively for Linux. Written entirely in Go using the **Charmbracelet Bubble Tea** framework, it aggregates critical network path diagnostics, interface I/O streams, and ISP metadata into a cohesive, keyboard-driven Cyberpunk/Sci-Fi tactical command dashboard.
 
-Instead of running separate windows for `ping`, `mtr`, `dig`, and `nload`, NetPulse runs them concurrently via non-blocking asynchronous Goroutines—ensuring zero interface lag even during severe packet drops or connection failure loops.
+Instead of running separate windows for `ping`, `mtr`, `dig`, and `nload`, NetPulse runs them concurrently via non-blocking asynchronous Goroutines ensuring zero interface lag even during severe packet drops or connection failure loops.
 
 ---
 
