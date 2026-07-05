@@ -1,6 +1,6 @@
 # NetPulse ⚡
 
-![NetPulse Terminal Interface](assets/netpulse_showcase.jpg)
+![NetPulse Terminal Interface](assets/netpulse_demo.gif)
 
 NetPulse is a zero-dependency, high-density real-time network diagnostic telemetry HUD designed exclusively for Linux. Written entirely in Go using the **Charmbracelet Bubble Tea** framework, it aggregates critical network path diagnostics, interface I/O streams, and ISP metadata into a cohesive, keyboard-driven Cyberpunk/Sci-Fi tactical command dashboard.
 
