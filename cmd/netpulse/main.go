@@ -19,7 +19,7 @@ func main() {
 	cfg := config.LoadConfig()
 
 	if *demoMode {
-		cfg.Targets.DNS[0].Name = "demo_user"
+		// Do not mutate cfg directly because SaveConfig will persist it
 	}
 
 	if *daemonMode {
@@ -27,7 +27,7 @@ func main() {
 		return
 	}
 
-	p := tea.NewProgram(ui.InitialModel(cfg), tea.WithAltScreen())
+	p := tea.NewProgram(ui.InitialModel(cfg, *demoMode), tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		fmt.Fprintf(os.Stderr, "Alas, there's been an error: %v\n", err)
 		os.Exit(1)

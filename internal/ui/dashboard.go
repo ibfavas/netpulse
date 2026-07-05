@@ -45,6 +45,7 @@ const (
 
 type Model struct {
 	cfg       *config.Config
+	isDemo    bool
 	gwPing    diagnostics.PingResult
 	backbones []diagnostics.PingResult
 	dns       []diagnostics.DNSResult
@@ -85,7 +86,7 @@ type Model struct {
 	height     int
 }
 
-func InitialModel(cfg *config.Config) Model {
+func InitialModel(cfg *config.Config, isDemo bool) Model {
 	prog := progress.New(
 		progress.WithSolidFill("#FF003C"),
 		progress.WithoutPercentage(),
@@ -101,6 +102,7 @@ func InitialModel(cfg *config.Config) Model {
 
 	return Model{
 		cfg:        cfg,
+		isDemo:     isDemo,
 		backbones:  make([]diagnostics.PingResult, 0),
 		dns:        make([]diagnostics.DNSResult, 0),
 		bbHistory:  make(map[string][]float64),
@@ -540,7 +542,7 @@ func (m Model) View() string {
 		if nodeName == "" {
 			nodeName = "unknown"
 		}
-		if len(m.cfg.Targets.DNS) > 0 && m.cfg.Targets.DNS[0].Name == "demo_user" {
+		if m.isDemo {
 			nodeName = "demo_node"
 		}
 

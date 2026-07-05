@@ -25,7 +25,7 @@ func RenderWAN(m Model, width int, height int) string {
 		city := m.wanMeta.City
 		region := m.wanMeta.Region
 
-		if m.cfg.Targets.DNS[0].Name == "demo_user" {
+		if m.isDemo {
 			org = "*****************"
 			ip = "***.***.***.***"
 			city = "********"

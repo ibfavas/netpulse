@@ -45,7 +45,7 @@ func RenderIface(m Model, width int, height int) string {
 		}
 
 		displayIP := active.IP
-		if m.cfg.Targets.DNS[0].Name == "demo_user" {
+		if m.isDemo {
 			mac = "xx:xx:xx:xx:xx:xx"
 			displayIP = "xxx.xxx.xxx.xxx"
 		}
