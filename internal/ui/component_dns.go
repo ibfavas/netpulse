@@ -17,7 +17,7 @@ func RenderDNS(m Model, width int, height int) string {
 	hasLoss := false
 	highLatency := false
 
-	maxItems := height - 2
+	maxItems := height - 4
 	if maxItems < 1 {
 		maxItems = 1
 	}

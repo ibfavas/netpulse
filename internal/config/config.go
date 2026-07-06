@@ -79,7 +79,48 @@ func LoadConfig() *Config {
 		return cfg
 	}
 
+	// Clear slices before unmarshal to prevent go-toml from appending to defaults
+	cfg.Targets.Backbones = nil
+	cfg.Targets.DNS = nil
+
 	toml.Unmarshal(data, cfg)
+
+	if len(cfg.Targets.Backbones) == 0 {
+		cfg.Targets.Backbones = DefaultConfig().Targets.Backbones
+	}
+	if len(cfg.Targets.DNS) == 0 {
+		cfg.Targets.DNS = DefaultConfig().Targets.DNS
+	}
+
+	// Deduplicate Backbones
+	seenBB := make(map[string]bool)
+	var cleanBB []string
+	for _, b := range cfg.Targets.Backbones {
+		if !seenBB[b] {
+			seenBB[b] = true
+			cleanBB = append(cleanBB, b)
+		}
+	}
+	cfg.Targets.Backbones = cleanBB
+
+	// Deduplicate DNS
+	seenDNS := make(map[string]bool)
+	var cleanDNS []struct {
+		Name string `toml:"name"`
+		Addr string `toml:"addr"`
+	}
+	for _, d := range cfg.Targets.DNS {
+		key := d.Name + "|" + d.Addr
+		if !seenDNS[key] {
+			seenDNS[key] = true
+			cleanDNS = append(cleanDNS, d)
+		}
+	}
+	cfg.Targets.DNS = cleanDNS
+
+	// Auto-save the repaired config to disk
+	SaveConfig(cfg)
+
 	return cfg
 }
 

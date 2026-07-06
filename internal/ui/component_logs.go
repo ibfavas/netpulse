@@ -16,7 +16,7 @@ func RenderLogs(m Model, height int) string {
 	titleText := RenderTitle("SUBSYSTEM: TELEMETRY_EVENT_LOG")
 	title := lipgloss.JoinHorizontal(lipgloss.Center, titleText)
 
-	contentHeight := height - 2
+	contentHeight := height - 4
 	if contentHeight < 1 {
 		contentHeight = 1
 	}

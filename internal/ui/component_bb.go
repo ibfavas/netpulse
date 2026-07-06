@@ -63,7 +63,7 @@ func RenderBackbones(m Model, height int) string {
 	hasLoss := false
 	highLatency := false
 
-	maxItems := height - 2
+	maxItems := height - 4
 	if maxItems < 1 {
 		maxItems = 1
 	}
@@ -129,11 +129,6 @@ func RenderBackbones(m Model, height int) string {
 
 	titleText := RenderTitle("SYSTEM: EXTERNAL_TRANSIT")
 	title := lipgloss.JoinHorizontal(lipgloss.Center, titleText, " ", badge)
-
-	minHeight := len(lines) + 3
-	if height < minHeight {
-		height = minHeight
-	}
 
 	return GetBoxStyle(m.focus == FocusBackbones, hasLoss, highLatency, boxWidth, height).
 		Render(lipgloss.JoinVertical(lipgloss.Left, title, "", strings.Join(lines, "\n")))

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"os/signal"
 	"path/filepath"
 	"strings"
@@ -18,15 +19,26 @@ import (
 
 func SendNotification(title, body string) {
 	conn, err := dbus.SessionBus()
-	if err != nil {
-		return
+	if err == nil {
+		obj := conn.Object("org.freedesktop.Notifications", "/org/freedesktop/Notifications")
+		call := obj.Call("org.freedesktop.Notifications.Notify", 0,
+			"NetPulse", uint32(0), "", title, body, []string{}, map[string]dbus.Variant{}, int32(5000))
+		if call.Err == nil {
+			return
+		}
 	}
-	obj := conn.Object("org.freedesktop.Notifications", "/org/freedesktop/Notifications")
 
-	call := obj.Call("org.freedesktop.Notifications.Notify", 0,
-		"NetPulse", uint32(0), "", title, body, []string{}, map[string]dbus.Variant{}, int32(5000))
-	if call.Err != nil {
-		fmt.Println("Failed to send notification:", call.Err)
+	// Fallback for sudo execution
+	sudoUser := os.Getenv("SUDO_USER")
+	if sudoUser != "" {
+		uidCmd := exec.Command("id", "-u", sudoUser)
+		uidOut, err := uidCmd.Output()
+		if err == nil {
+			uid := strings.TrimSpace(string(uidOut))
+			dbusAddr := fmt.Sprintf("DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/%s/bus", uid)
+			cmd := exec.Command("sudo", "-u", sudoUser, "env", dbusAddr, "notify-send", title, body)
+			_ = cmd.Run()
+		}
 	}
 }
 
@@ -65,12 +77,15 @@ func Run(cfg *config.Config) {
 	// Initial notification check
 	SendNotification("NetPulse", "Daemon started monitoring your connection.")
 
+	nodeState := make(map[string]string)
+
 	for {
 		select {
 		case <-sigChan:
 			fmt.Println("\nDaemon shutting down.")
 			return
 		case <-ticker.C:
+			// Ping Gateway
 			gwIP, _ := diagnostics.GetDefaultGateway()
 			if gwIP == "" {
 				gwIP = "1.1.1.1"
@@ -89,14 +104,44 @@ func Run(cfg *config.Config) {
 			f.WriteString(string(b) + "\n")
 
 			if isDown && !wasDown {
-				SendNotification("NetPulse Alert", "Network connection lost!")
+				SendNotification("NetPulse Alert", "Gateway connection lost!")
 				wasDown = true
 			} else if !isDown && wasDown {
-				SendNotification("NetPulse Alert", "Network connection restored.")
+				SendNotification("NetPulse Alert", "Gateway connection restored.")
 				wasDown = false
-			} else if !isDown && ms > float64(cfg.Daemon.AlertThreshold) {
-				SendNotification("NetPulse Alert", fmt.Sprintf("High latency detected: %.1fms", ms))
+			}
+
+			// Monitor Targets (Backbones + DNS)
+			for _, bb := range cfg.Targets.Backbones {
+				checkTargetState(bb, bb, float64(cfg.Daemon.AlertThreshold), nodeState)
+			}
+			for _, dns := range cfg.Targets.DNS {
+				checkTargetState(dns.Addr, dns.Name, float64(cfg.Daemon.AlertThreshold), nodeState)
 			}
 		}
 	}
+}
+
+func checkTargetState(ip, name string, threshold float64, nodeState map[string]string) {
+	res := diagnostics.Ping(ip)
+	ms := float64(res.Latency.Microseconds()) / 1000.0
+
+	newState := "ONLINE"
+	if res.Loss > 0 || res.Error != nil {
+		newState = "FAULT"
+	} else if ms > threshold {
+		newState = "WARN"
+	}
+
+	oldState := nodeState[name]
+	if oldState != "" && oldState != newState {
+		if newState == "FAULT" {
+			SendNotification("NetPulse Alert", fmt.Sprintf("Node %s timeout fault detected.", name))
+		} else if newState == "WARN" {
+			SendNotification("NetPulse Alert", fmt.Sprintf("Node %s latency exceeded threshold (>%.0fms).", name, threshold))
+		} else if newState == "ONLINE" {
+			SendNotification("NetPulse Info", fmt.Sprintf("Node %s has recovered and is fully operational.", name))
+		}
+	}
+	nodeState[name] = newState
 }

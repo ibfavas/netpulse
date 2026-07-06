@@ -565,21 +565,27 @@ func (m Model) View() string {
 			available = 10 // Prevent panic on microscopic terminals
 		}
 
-		row1Height := 6
+		row1Height := 8
 		if len(m.dns) > 4 {
-			row1Height = len(m.dns) + 2
+			row1Height = len(m.dns) + 4
 		}
 		// Prevent DNS list from consuming the entire screen
 		if row1Height > available/2 {
 			row1Height = available / 2
 		}
+		if row1Height < 8 {
+			row1Height = 8
+		}
 
-		row2Height := 7
+		row2Height := 9
 		if row2Height > available/3 {
 			row2Height = available / 3
 		}
+		if row2Height < 9 {
+			row2Height = 9
+		}
 
-		bbHeight := len(m.backbones) + 3
+		bbHeight := len(m.backbones) + 5
 		logHeight := available - (row1Height + row2Height + bbHeight)
 
 		// Balance the bottom panels
